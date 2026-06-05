@@ -1,4 +1,746 @@
-node_modules/
-data/
-*.db
-.env
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einweisungsprotokoll – Mertert</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#f5f4f0;--surface:#fff;--border:#dddbd4;--bl:#eae8e2;--text:#1a1917;--tm:#6b6860;--tf:#a09e99;--ac:#1a5c3a;--al:#e8f2ec;--at:#0f3d26;--wn:#7a4f0d;--wb:#fdf3e3;--dn:#8b1a1a;--db:#fdf0f0;--r:8px;--rl:12px;--sh:0 1px 3px rgba(0,0,0,.08)}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;min-height:100vh}
+header{background:var(--ac);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-size:13px;font-weight:600;color:#fff;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.logo span{opacity:.6;margin-left:6px;font-weight:400;text-transform:none;letter-spacing:0}
+nav{display:flex;gap:3px;flex-wrap:nowrap}
+nav button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap}
+nav button:hover{background:rgba(255,255,255,.22)}
+nav button.active{background:rgba(255,255,255,.28);font-weight:500}
+#pb{height:3px;background:var(--bl);position:sticky;top:52px;z-index:99}
+#pf{height:100%;background:var(--ac);width:0%;transition:width .3s}
+main{max-width:700px;margin:0 auto;padding:24px 16px 60px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:12px;box-shadow:var(--sh)}
+.ct{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.fld{margin-bottom:12px}.fld:last-child{margin-bottom:0}
+.fld label{display:block;font-size:11px;font-weight:500;color:var(--tm);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid var(--border);border-radius:var(--r);padding:0 10px;font-family:inherit;font-size:13px;color:var(--text);background:var(--bg);appearance:none;-webkit-appearance:none}
+.fld input,.fld select{height:38px}
+.fld textarea{padding:8px 10px;resize:vertical}
+.fld select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6860' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(26,92,58,.12)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.g2{grid-template-columns:1fr}}
+.minfo{display:none;background:var(--al);border-radius:var(--r);padding:8px 12px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--at);margin-bottom:12px}
+.glbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tf);padding:8px 0 4px;margin-top:2px}
+.ci{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid var(--bl);font-size:13px}
+.ci:last-child{border-bottom:none}
+.ci input[type=checkbox]{width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--ac);cursor:pointer}
+.ci label{cursor:pointer;line-height:1.4;color:var(--text)}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.sg{grid-template-columns:1fr}}
+.sl{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--tm);margin-bottom:5px;display:block}
+.sw{position:relative}
+canvas.sc{display:block;width:100%;height:100px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);touch-action:none;cursor:crosshair}
+.scl{position:absolute;top:6px;right:6px;font-size:10px;padding:2px 8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--tm);font-family:inherit}
+.bp{width:100%;height:44px;background:var(--ac);color:#fff;border:none;border-radius:var(--rl);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.bp:hover{background:#145030}
+.bs{padding:7px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);font-family:inherit;font-size:12px;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.bs:hover{background:var(--bg)}
+.bd{padding:4px 9px;background:var(--db);border:1px solid #f5c0c0;border-radius:var(--r);font-family:inherit;font-size:11px;color:var(--dn);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.bd:hover{background:#fae0e0}
+.bsm{padding:4px 9px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-family:inherit;font-size:11px;color:var(--tm);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.bsm:hover{background:var(--bg);color:var(--text)}
+.screen{display:none}.screen.active{display:block}
+.es{text-align:center;padding:32px 0;color:var(--tf);font-size:13px}
+.mc{border:1px solid var(--border);border-radius:var(--r);background:var(--surface);margin-bottom:8px;overflow:hidden}
+.mch{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;gap:8px}
+.mch:hover{background:var(--bg)}
+.mci{flex:1;min-width:0}
+.mcn{font-size:13px;font-weight:600}
+.mcs{font-size:11px;color:var(--tm);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.mca{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;align-items:center}
+.mcb{display:none;border-top:1px solid var(--bl);padding:14px;background:var(--bg)}
+.mcb.open{display:block}
+.gb{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.gh{display:flex;align-items:center;gap:7px;padding:9px 11px}
+.gh input{flex:1;border:none;background:transparent;font-family:inherit;font-size:12px;font-weight:500;color:var(--text);outline:none}
+.gh input:focus{background:var(--bg);border-radius:4px;padding:2px 5px}
+.gi{padding:0 11px 8px}
+.ir{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.ir input{flex:1;height:32px;border:1px solid var(--border);border-radius:var(--r);padding:0 9px;font-family:inherit;font-size:12px;color:var(--text);background:var(--bg)}
+.ir input:focus{outline:none;border-color:var(--ac)}
+.air{padding:0 11px 8px}
+.aib{font-size:11px;color:var(--ac);background:none;border:none;cursor:pointer;font-family:inherit;padding:3px 0;display:flex;align-items:center;gap:4px}
+.aib:hover{text-decoration:underline}
+.agb{width:100%;padding:9px;border:1px dashed var(--border);border-radius:var(--r);background:transparent;font-family:inherit;font-size:12px;color:var(--tm);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;margin-top:6px}
+.agb:hover{border-color:var(--ac);color:var(--ac);background:var(--al)}
+.bdg{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.bdg-ok{background:var(--al);color:var(--at)}
+.bdg-w{background:var(--wb);color:var(--wn)}
+.bdg-b{background:#e8eaf6;color:#3949ab}
+.bdg-c{background:var(--al);color:var(--at)}
+.ri{border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;background:var(--surface)}
+.rh{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.rn{font-size:13px;font-weight:600}
+.rm{font-size:11px;color:var(--tm);margin-top:2px}
+.rf{display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:6px}
+.rid{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--tf)}
+/* quiz */
+.qopt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--r);border:1px solid var(--border);cursor:pointer;background:var(--surface);font-family:inherit;font-size:13px;text-align:left;line-height:1.4;width:100%;transition:border-color .15s,background .15s}
+.qopt:hover{border-color:var(--tm);background:var(--bg)}
+.ql{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;margin-top:1px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Einweisungsprotokoll <span>Mertert</span></div>
+  <nav>
+    <button id="nb-form" class="active" onclick="S('form')">Formular</button>
+    <button id="nb-rec" onclick="S('rec')">Protokolle <span id="rc" style="opacity:.7"></span></button>
+    <button id="nb-mgmt" onclick="S('mgmt')">Maschinen</button>
+    <button id="nb-quiz" onclick="S('quiz')">Fragebogen</button>
+  </nav>
+</header>
+<div id="pb"><div id="pf"></div></div>
+<main>
+
+<!-- ═══ FORMULAR ═══ -->
+<div id="s-form" class="screen active">
+  <div class="card">
+    <div class="ct"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Maschinenauswahl</div>
+    <div class="fld"><label>Maschine</label><select id="msel" onchange="onMC()"><option value="">— Bitte auswählen —</option></select></div>
+    <div class="minfo" id="minfo"></div>
+  </div>
+  <div class="card">
+    <div class="ct"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Mitarbeiterdaten</div>
+    <div class="g2">
+      <div class="fld"><label>Fahrer / Mitarbeiter</label><input type="text" id="fahrer" placeholder="Vor- und Nachname" oninput="upP()"></div>
+      <div class="fld"><label>Einweisender (Wartung)</label><input type="text" id="einweiser" placeholder="Vor- und Nachname" oninput="upP()"></div>
+    </div>
+    <div class="fld"><label>Datum der Einweisung</label><input type="date" id="datum" oninput="upP()"></div>
+  </div>
+  <div class="card">
+    <div class="ct"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Einweisungsinhalte</div>
+    <div id="clw"><div style="font-size:13px;color:var(--tf);padding:4px 0">Bitte zuerst eine Maschine auswählen.</div></div>
+  </div>
+  <div class="card">
+    <div class="ct"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Unterschriften</div>
+    <p style="font-size:12px;color:var(--tm);margin-bottom:14px">Mit Finger oder Stift direkt im Feld unterschreiben.</p>
+    <div class="sg">
+      <div><span class="sl">Unterschrift Fahrer</span><div class="sw"><canvas class="sc" id="s1"></canvas><button class="scl" onclick="clrS('s1')">Löschen</button></div></div>
+      <div><span class="sl">Unterschrift Einweisender</span><div class="sw"><canvas class="sc" id="s2"></canvas><button class="scl" onclick="clrS('s2')">Löschen</button></div></div>
+    </div>
+    <div style="margin-top:14px"><span class="sl">Unterschrift Betriebsleitung</span><div class="sw"><canvas class="sc" id="s3"></canvas><button class="scl" onclick="clrS('s3')">Löschen</button></div></div>
+  </div>
+  <button class="bp" onclick="submit()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Einweisung abschließen &amp; speichern</button>
+</div>
+
+<!-- ═══ ERFOLG ═══ -->
+<div id="s-ok" class="screen">
+  <div class="card" style="text-align:center;padding:32px 20px">
+    <div style="font-size:44px;margin-bottom:10px">✓</div>
+    <div style="font-size:18px;font-weight:600;margin-bottom:6px">Einweisung gespeichert</div>
+    <div id="ok-det" style="font-size:12px;color:var(--tm);margin-bottom:20px;font-family:'IBM Plex Mono',monospace"></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="bs" onclick="dlPDF()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
+      <button class="bs" onclick="S('rec')">Alle Protokolle</button>
+      <button class="bs" onclick="resetF()">Neue Einweisung</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROTOKOLLE ═══ -->
+<div id="s-rec" class="screen">
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div><div style="font-size:15px;font-weight:600">Gespeicherte Protokolle</div><div id="rec-sum" style="font-size:11px;color:var(--tm);margin-top:2px"></div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="bs" onclick="expCSV()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV</button>
+        <button class="bs" onclick="S('form')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Zurück</button>
+      </div>
+    </div>
+  </div>
+  <div id="rec-list" style="max-height:65vh;overflow-y:auto"></div>
+</div>
+
+<!-- ═══ MASCHINEN ═══ -->
+<div id="s-mgmt" class="screen">
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div><div style="font-size:15px;font-weight:600">Standard-Einweisungspunkte</div><div style="font-size:11px;color:var(--tm);margin-top:2px">Gemeinsame Vorlage für alle neuen Maschinen</div></div>
+      <button class="bs" style="font-size:11px" onclick="toggleTmpl()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Bearbeiten</button>
+    </div>
+    <div id="tmpl-prev"></div>
+    <div id="tmpl-ed" style="display:none;margin-top:12px;border-top:1px solid var(--bl);padding-top:12px">
+      <p style="font-size:11px;color:var(--tf);margin-bottom:10px">Änderungen gelten nur für neu angelegte Maschinen.</p>
+      <div id="tmpl-ge"></div>
+      <button class="agb" onclick="addTG()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Gruppe hinzufügen</button>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="bp" style="flex:1" onclick="saveTmpl()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Vorlage speichern</button>
+        <button class="bs" onclick="toggleTmpl()">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:15px;font-weight:600">Maschinenliste</div>
+      <button class="bs" style="font-size:11px" onclick="showME(null)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Neue Maschine</button>
+    </div>
+    <div id="mgmt-list"></div>
+  </div>
+  <div id="mgmt-ed" style="display:none">
+    <div class="card">
+      <div class="ct"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span id="me-title">Neue Maschine</span></div>
+      <div class="g2">
+        <div class="fld"><label>Bezeichnung *</label><input type="text" id="me-label" placeholder="z.B. Liebherr R920"></div>
+        <div class="fld"><label>Seriennummer</label><input type="text" id="me-serial" placeholder="z.B. ABC-12345"></div>
+      </div>
+      <div class="g2">
+        <div class="fld"><label>Baujahr</label><input type="text" id="me-year" placeholder="z.B. 2023"></div>
+        <div class="fld"><label>Typ / Kategorie</label><input type="text" id="me-type" placeholder="z.B. Radlader"></div>
+      </div>
+      <div style="border-top:1px solid var(--bl);margin:12px 0 10px"></div>
+      <div class="ct" style="margin-bottom:8px;font-size:11px">Einweisungspunkte</div>
+      <p style="font-size:11px;color:var(--tf);margin-bottom:10px">Beim Anlegen aus der Vorlage übernommen – hier maschinenspezifisch anpassen.</p>
+      <div id="me-ge"></div>
+      <button class="agb" onclick="addMG()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Gruppe hinzufügen</button>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="bp" style="flex:1;min-width:140px" onclick="saveMachine()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Maschine speichern</button>
+        <button class="bs" onclick="cancelME()">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRAGEBOGEN ═══ -->
+<div id="s-quiz" class="screen">
+  <div id="qz-main">
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div><div style="font-size:15px;font-weight:600">Wissenstest</div><div style="font-size:11px;color:var(--tm);margin-top:2px">Fragen verwalten und Test starten</div></div>
+        <div style="display:flex;gap:6px">
+          <button class="bs" style="font-size:11px" onclick="showQE(null)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Neue Frage</button>
+          <button class="bp" style="width:auto;height:34px;padding:0 14px;margin-top:0;font-size:12px" onclick="startQuiz()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Test starten</button>
+        </div>
+      </div>
+      <div id="qz-list"></div>
+    </div>
+    <div id="qz-res-list"></div>
+  </div>
+  <div id="qz-editor" style="display:none">
+    <div class="card">
+      <div class="ct"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span id="qe-title">Neue Frage</span></div>
+      <div class="fld"><label>Kategorie</label><input type="text" id="qe-cat" placeholder="z.B. Allgemeine Sicherheit"></div>
+      <div class="fld"><label>Frage *</label><textarea id="qe-text" rows="3" placeholder="Fragetext eingeben…"></textarea></div>
+      <div style="border-top:1px solid var(--bl);margin:12px 0 10px"></div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tm);margin-bottom:8px">Antworten — richtige Antwort markieren</div>
+      <div id="qe-opts"></div>
+      <button class="agb" onclick="qAddOpt()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Antwort hinzufügen</button>
+      <div class="fld" style="margin-top:12px"><label>Erklärung (bei falscher Antwort)</label><textarea id="qe-expl" rows="2" placeholder="Kurze Begründung…"></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="bp" style="flex:1;min-width:140px" onclick="saveQ()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Frage speichern</button>
+        <button class="bs" onclick="cancelQE()">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+  <div id="qz-test" style="display:none">
+    <div class="card">
+      <div style="height:4px;background:var(--bl);border-radius:2px;margin-bottom:18px;overflow:hidden"><div id="qz-prog" style="height:100%;background:var(--ac);border-radius:2px;transition:width .4s;width:0%"></div></div>
+      <div id="qz-body"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+/* ═══════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════ */
+const DT=[
+  {title:"1 — Allgemeine Sicherheit",items:["PSA (Helm, Sicherheitsschuhe, Warnweste)","Betriebsanleitung gelesen und verstanden","Sicherheits- und Warnhinweise verstanden","Notaus-Einrichtung gezeigt / erklärt","Verhalten bei Störung erklärt","Gefahrenbereiche und Sicherheitsabstände erklärt"]},
+  {title:"2 — Maschinenkontrolle vor Arbeitsbeginn",items:["Sichtprüfung Maschine","Reifen und Betriebsstoffe kontrolliert","Hydraulikleitungen geprüft","Beleuchtung und Warnsignal geprüft"]},
+  {title:"3 — Bedienung der Maschine",items:["Einstieg / Ausstieg erklärt","Start- und Abstellvorgang erklärt","Bedienhebel und Funktionen erklärt","Fahr- und Arbeitsbewegungen erklärt","Lastdiagramm verstanden"]},
+  {title:"4 — Wartung und Pflege",items:["Tägliche Wartung erklärt","Schmierpunkte erklärt","Meldepflicht bei Störung und Schäden","Zustand und Sauberkeit"]},
+  {title:"5 — Praktische Unterweisung",items:["Mitarbeiter hat Maschine selbstständig bedient","Funktionen verstanden","Sicherheitsregeln eingehalten"]}
+];
+const BI={
+  sennebogen:{label:"Sennebogen 360G",serial:"360G.0.1084",year:"2026",type:"Gelände-Stapler",builtin:true,groups:JSON.parse(JSON.stringify(DT))},
+  liebherr:{label:"Liebherr L508",serial:"VATZ1111TZB026232",year:"2011",type:"Radlader",builtin:true,groups:JSON.parse(JSON.stringify(DT))},
+  kehrmaschine:{label:"Tuchel Profi Champ 2400",serial:"1561-2184-000",year:"2026",type:"Kehrmaschine",builtin:true,groups:JSON.parse(JSON.stringify(DT))}
+};
+const DQ=[
+  {id:'dq1',cat:'Allgemeine Sicherheit',q:'Welche PSA muss beim Führen einer Maschine getragen werden?',opts:['Nur Sicherheitsschuhe','Helm, Sicherheitsschuhe und Warnweste','Helm und Handschuhe','Keine – PSA ist freiwillig'],correct:1,expl:'PSA umfasst Helm, Sicherheitsschuhe und Warnweste – alle drei sind Pflicht.'},
+  {id:'dq2',cat:'Allgemeine Sicherheit',q:'Was tun bei einer Störung der Maschine?',opts:['Sofort selbst reparieren','Weitermachen und später melden','Maschine sichern und Vorgesetzten informieren','Störung ignorieren'],correct:2,expl:'Maschine sichern, abstellen und sofort den Vorgesetzten informieren.'},
+  {id:'dq3',cat:'Maschinenkontrolle',q:'Wann findet die Sichtprüfung der Maschine statt?',opts:['Einmal pro Woche','Nur nach einem Unfall','Vor Arbeitsbeginn täglich','Nach Arbeitsende'],correct:2,expl:'Sichtprüfung vor jedem Arbeitsbeginn: Reifen, Betriebsstoffe, Beleuchtung, Warnsignale.'},
+  {id:'dq4',cat:'Maschinenkontrolle',q:'Hydraulikleitungen zeigen eine Ölspur. Was tun?',opts:['Abwischen und weiterarbeiten','Sofort melden, Maschine nicht benutzen','Mit Öl auffüllen','Ist normal – kein Handlungsbedarf'],correct:1,expl:'Undichte Leitungen = sofort Stillstand und Meldepflicht beim Vorgesetzten.'},
+  {id:'dq5',cat:'Bedienung der Maschine',q:'Was besagt das Lastdiagramm?',opts:['Die Höchstgeschwindigkeit','Zulässige Lasten je Reichweite','Kraftstoffverbrauch','Maximalen Reifendruck'],correct:1,expl:'Das Lastdiagramm zeigt die zulässigen Traglast-Reichweiten-Kombinationen.'},
+  {id:'dq6',cat:'Bedienung der Maschine',q:'Wie wird die Maschine korrekt abgestellt?',opts:['Motor laufen lassen','Anbaugerät absenken, Motor abstellen, Parkbremse anziehen','Einfach aussteigen','Schlüssel stecken lassen'],correct:1,expl:'Anbaugerät absenken, Motor abstellen, Parkbremse anziehen, Schlüssel abziehen.'},
+  {id:'dq7',cat:'Wartung und Pflege',q:'Was muss nach dem Einsatz der Kehrmaschine getan werden?',opts:['Nichts','Nur Anbaugerät abnehmen','Wassertank entleeren und Maschine reinigen','Schmierpunkte abspülen'],correct:2,expl:'Wassertank vollständig entleeren und Kehrmaschine gründlich reinigen – Pflicht des Bedieners.'},
+  {id:'dq8',cat:'Wartung und Pflege',q:'An wen ist ein Schaden sofort zu melden?',opts:['Dem nächsten Fahrer','Vorgesetzten oder Wartungsabteilung','Niemandem','Erst am Monatsende'],correct:1,expl:'Meldepflicht gilt sofort – an Vorgesetzte oder Wartung.'},
+  {id:'dq9',cat:'Praktische Sicherheit',q:'Ein Fußgänger betritt den Arbeitsbereich. Was tun?',opts:['Hupen und weiterfahren','Sofort anhalten, Person auf Gefahr hinweisen','Ignorieren','Schneller fahren'],correct:1,expl:'Sofort Halt, Motor sichern, Person ansprechen.'},
+  {id:'dq10',cat:'Praktische Sicherheit',q:'Hydraulikleitung anschließen – Anlage muss …',opts:['… unter Druck stehen','… drucklos sein','… auf Betriebstemperatur sein','… abgekühlt unter Druck stehen'],correct:1,expl:'Nur im drucklosen Zustand anschließen – Verletzungsgefahr durch Ölstrahl.'}
+];
+
+const KE='einweisungen_v1',KM='maschinen_v1',KT='template_v1',KQ='quiz_q_v1',KR='quiz_r_v1';
+let lastRec=null,meId=null,qeId=null,qRun=null;
+
+/* ═══════════════════════════════════════════════
+   STORAGE — API + localStorage fallback
+═══════════════════════════════════════════════ */
+const USE_API = window.location.protocol !== 'file:';  // true when hosted on server
+
+const ld=(k,fb)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch(e){return fb;}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+
+async function apiFetch(path,opts={}){
+  const res=await fetch(path,{headers:{'Content-Type':'application/json'},...opts,body:opts.body?JSON.stringify(opts.body):undefined});
+  if(!res.ok)throw new Error(await res.text());
+  return res.json();
+}
+
+// Machines: merge builtin + server/local custom
+let _customM={};
+async function loadCustomM(){
+  if(USE_API){try{_customM=await apiFetch('/api/maschinen');}catch(e){_customM=ld(KM,{});}}
+  else{_customM=ld(KM,{});}
+}
+const allM=()=>Object.assign({},BI,_customM);
+
+// Template
+let _tmpl=null;
+async function loadTmpl(){
+  if(USE_API){try{const t=await apiFetch('/api/template');_tmpl=t||JSON.parse(JSON.stringify(DT));}catch(e){_tmpl=ld(KT,JSON.parse(JSON.stringify(DT)));}}
+  else{_tmpl=ld(KT,JSON.parse(JSON.stringify(DT)));}
+}
+const tmpl=()=>_tmpl||JSON.parse(JSON.stringify(DT));
+
+// Records
+let _recs=[];
+async function loadRecs(){
+  if(USE_API){try{_recs=await apiFetch('/api/protokolle');}catch(e){_recs=ld(KE,[]);}}
+  else{_recs=ld(KE,[]);}
+}
+const dbAll=()=>_recs;
+async function dbAdd(r){
+  if(USE_API){try{await apiFetch('/api/protokolle',{method:'POST',body:r});}catch(e){console.error(e);}}
+  else{const a=ld(KE,[]);a.push(r);sv(KE,a);}
+  _recs=[r,..._recs];upRC();
+}
+
+// Quiz questions
+let _qqs=null;
+const qAll=()=>_qqs||ld(KQ,JSON.parse(JSON.stringify(DQ)));
+function svQ(qs){_qqs=qs;sv(KQ,qs);}
+
+// Quiz results
+const qResAll=()=>ld(KR,[]);
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION — single function, handles all tabs
+═══════════════════════════════════════════════ */
+function S(name){
+  ['form','ok','rec','mgmt','quiz'].forEach(n=>{
+    const el=document.getElementById('s-'+n);
+    if(el){el.classList.remove('active');el.style.display='none';}
+  });
+  const sc=document.getElementById('s-'+name);
+  if(sc){sc.classList.add('active');sc.style.display='block';}
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  const map={form:'nb-form',ok:'nb-form',rec:'nb-rec',mgmt:'nb-mgmt',quiz:'nb-quiz'};
+  const nb=document.getElementById(map[name]);if(nb)nb.classList.add('active');
+  if(name==='rec')renderRecs();
+  if(name==='mgmt'){renderMgmt();renderTmplPrev();}
+  if(name==='quiz'){renderQList();renderQRes();}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function upRC(){const n=dbAll().length;document.getElementById('rc').textContent=n?'('+n+')':'';}
+
+/* ═══════════════════════════════════════════════
+   DROPDOWN
+═══════════════════════════════════════════════ */
+function buildDD(keep){
+  const sel=document.getElementById('msel'),prev=keep||sel.value;
+  sel.innerHTML='<option value="">— Bitte auswählen —</option>';
+  Object.entries(allM()).forEach(([k,m])=>{
+    const o=document.createElement('option');o.value=k;
+    o.textContent=m.label+(m.type?' ('+m.type+')':'');sel.appendChild(o);
+  });
+  if(prev)sel.value=prev;
+}
+
+/* ═══════════════════════════════════════════════
+   FORMULAR
+═══════════════════════════════════════════════ */
+function onMC(){
+  const v=document.getElementById('msel').value,
+        mi=document.getElementById('minfo'),cw=document.getElementById('clw');
+  if(!v){mi.style.display='none';cw.innerHTML='<div style="font-size:13px;color:var(--tf);padding:4px 0">Bitte zuerst eine Maschine auswählen.</div>';upP();return;}
+  const m=allM()[v];
+  mi.style.display='block';
+  mi.textContent=(m.serial?'SN: '+m.serial:'')+(m.year?'  ·  Bj. '+m.year:'');
+  let html='',i=0;
+  m.groups.forEach(g=>{
+    html+='<div class="glbl">'+H(g.title)+'</div>';
+    g.items.forEach(it=>{html+='<div class="ci"><input type="checkbox" id="c'+i+'" onchange="upP()"><label for="c'+i+'">'+H(it)+'</label></div>';i++;});
+  });
+  cw.innerHTML=html;upP();
+}
+function upP(){
+  const cbs=document.querySelectorAll('#clw input[type=checkbox]');
+  const flds=[document.getElementById('msel').value,document.getElementById('fahrer').value,document.getElementById('einweiser').value,document.getElementById('datum').value];
+  const tot=4+(cbs.length||0),done=flds.filter(Boolean).length+[...cbs].filter(c=>c.checked).length;
+  document.getElementById('pf').style.width=(tot>0?Math.round((done/tot)*100):0)+'%';
+}
+
+/* ═══════════════════════════════════════════════
+   SIGNATURES
+═══════════════════════════════════════════════ */
+function initS(id){
+  const c=document.getElementById(id),dpr=window.devicePixelRatio||1;
+  const rsz=()=>{const r=c.getBoundingClientRect();c.width=r.width*dpr;c.height=r.height*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);x.strokeStyle='#1a1917';x.lineWidth=2;x.lineCap='round';x.lineJoin='round';};
+  rsz();let drw=false;
+  const gp=e=>{const r=c.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.clientX-r.left,y:e.clientY-r.top};};
+  c.addEventListener('mousedown',e=>{e.preventDefault();drw=true;const p=gp(e);const x=c.getContext('2d');x.beginPath();x.moveTo(p.x,p.y);});
+  c.addEventListener('mousemove',e=>{if(!drw)return;const p=gp(e);const x=c.getContext('2d');x.lineTo(p.x,p.y);x.stroke();});
+  c.addEventListener('mouseup',()=>drw=false);c.addEventListener('mouseleave',()=>drw=false);
+  c.addEventListener('touchstart',e=>{e.preventDefault();drw=true;const p=gp(e);const x=c.getContext('2d');x.beginPath();x.moveTo(p.x,p.y);},{passive:false});
+  c.addEventListener('touchmove',e=>{if(!drw)return;e.preventDefault();const p=gp(e);const x=c.getContext('2d');x.lineTo(p.x,p.y);x.stroke();},{passive:false});
+  c.addEventListener('touchend',()=>drw=false);
+}
+function clrS(id){const c=document.getElementById(id);c.getContext('2d').clearRect(0,0,c.width,c.height);}
+function sEmpty(id){return!document.getElementById(id).getContext('2d').getImageData(0,0,document.getElementById(id).width,document.getElementById(id).height).data.some(v=>v!==0);}
+
+/* ═══════════════════════════════════════════════
+   SUBMIT
+═══════════════════════════════════════════════ */
+function submit(){
+  const mach=document.getElementById('msel').value,
+        f=document.getElementById('fahrer').value.trim(),
+        e=document.getElementById('einweiser').value.trim(),
+        d=document.getElementById('datum').value;
+  if(!mach||!f||!e||!d){alert('Bitte Maschine, Namen und Datum ausfüllen.');return;}
+  if(sEmpty('s1')||sEmpty('s2')){alert('Bitte Unterschriften von Fahrer und Einweisendem eintragen.');return;}
+  const cbs=document.querySelectorAll('#clw input[type=checkbox]');
+  if([...cbs].filter(c=>!c.checked).length>0&&!confirm([...cbs].filter(c=>!c.checked).length+' Punkt(e) nicht abgehakt. Trotzdem abschließen?'))return;
+  const gp=[],np=[];cbs.forEach(c=>(c.checked?gp:np).push(c.nextElementSibling.textContent));
+  const m=allM()[mach];
+  const rec={id:'EW-'+Date.now(),ts:new Date().toISOString(),maschine:mach,maschineLabel:m.label,serial:m.serial||'',year:m.year||'',fahrer:f,einweiser:e,datum:d,geprueft:gp,nichtGeprueft:np,
+    sigF:document.getElementById('s1').toDataURL(),sigE:document.getElementById('s2').toDataURL(),
+    sigL:sEmpty('s3')?null:document.getElementById('s3').toDataURL()};
+  dbAdd(rec);lastRec=rec;
+  document.getElementById('ok-det').textContent=m.label+' · '+f+' · '+new Date(d).toLocaleDateString('de-DE')+' · '+rec.id;
+  S('ok');
+}
+function resetF(){
+  ['msel','fahrer','einweiser'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('datum').value=new Date().toISOString().split('T')[0];
+  document.getElementById('minfo').style.display='none';
+  document.getElementById('clw').innerHTML='<div style="font-size:13px;color:var(--tf);padding:4px 0">Bitte zuerst eine Maschine auswählen.</div>';
+  ['s1','s2','s3'].forEach(clrS);lastRec=null;upP();S('form');
+}
+
+/* ═══════════════════════════════════════════════
+   PROTOKOLLE
+═══════════════════════════════════════════════ */
+function renderRecs(){
+  const recs=dbAll().slice().reverse();
+  document.getElementById('rec-sum').textContent=recs.length?recs.length+' Einweisungen':'';
+  upRC();
+  if(!recs.length){document.getElementById('rec-list').innerHTML='<div class="es">Noch keine Protokolle.</div>';return;}
+  document.getElementById('rec-list').innerHTML=recs.map(r=>{
+    const d=new Date(r.datum).toLocaleDateString('de-DE'),tot=r.geprueft.length+r.nichtGeprueft.length,pct=tot>0?Math.round((r.geprueft.length/tot)*100):0;
+    return'<div class="ri"><div class="rh"><div><div class="rn">'+H(r.maschineLabel)+'</div><div class="rm">'+H(r.fahrer)+' · '+H(r.einweiser)+' · '+d+'</div></div><span class="bdg '+(pct===100?'bdg-ok':'bdg-w')+'">'+pct+'%</span></div><div class="rf"><span class="rid">'+r.id+'</span><button class="bs" style="font-size:11px;padding:4px 10px" onclick="dlPDFid(\''+r.id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button></div></div>';
+  }).join('');
+}
+function expCSV(){if(USE_API){window.location.href='/api/export/csv';return;}
+  const recs=dbAll();if(!recs.length){alert('Keine Protokolle.');return;}
+  const h=['ID','Datum','Maschine','SN','Fahrer','Einweisender','OK','NOK','Pct','Erfasst'];
+  const rows=recs.map(r=>{const tot=r.geprueft.length+r.nichtGeprueft.length,pct=tot>0?Math.round((r.geprueft.length/tot)*100):0;return[r.id,r.datum,r.maschineLabel,r.serial,r.fahrer,r.einweiser,r.geprueft.length,r.nichtGeprueft.length,pct+'%',r.ts].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',');});
+  const csv='\uFEFF'+[h.join(','),...rows].join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='Einweisungen_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+
+/* ═══════════════════════════════════════════════
+   VORLAGE
+═══════════════════════════════════════════════ */
+function renderTmplPrev(){
+  const t=tmpl(),el=document.getElementById('tmpl-prev');
+  const tot=t.reduce((s,g)=>s+g.items.length,0);
+  el.innerHTML='<div style="font-size:12px;color:var(--tm);margin-bottom:8px">'+t.length+' Gruppen · '+tot+' Prüfpunkte</div>'+
+    t.map(g=>'<div style="margin-bottom:7px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tf);margin-bottom:3px">'+H(g.title)+'</div>'+g.items.map(i=>'<div style="font-size:12px;padding:2px 0 2px 10px;border-left:2px solid var(--bl);color:var(--tm);margin-bottom:1px">'+H(i)+'</div>').join('')+'</div>').join('');
+}
+function toggleTmpl(){
+  const ed=document.getElementById('tmpl-ed');
+  if(ed.style.display!=='none'){ed.style.display='none';return;}
+  const ge=document.getElementById('tmpl-ge');ge.innerHTML='';
+  tmpl().forEach(g=>addGBlock(ge,g));
+  ed.style.display='block';
+  setTimeout(()=>ed.scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+function addTG(){
+  const ge=document.getElementById('tmpl-ge');
+  addGBlock(ge,{title:'',items:['']});
+  ge.lastChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+  ge.lastChild.querySelector('.gh input').focus();
+}
+async function saveTmpl(){
+  const g=readGroups('tmpl-ge');
+  if(!g.length||!g.some(x=>x.items.length)){alert('Mindestens einen Prüfpunkt anlegen.');return;}
+  if(USE_API){try{await apiFetch('/api/template',{method:'POST',body:{groups:g}});}catch(e){console.error(e);}}
+  else{sv(KT,g);}
+  _tmpl=g;document.getElementById('tmpl-ed').style.display='none';renderTmplPrev();
+}
+
+/* ═══════════════════════════════════════════════
+   MASCHINEN
+═══════════════════════════════════════════════ */
+function renderMgmt(){
+  const el=document.getElementById('mgmt-list'),all=Object.entries(allM());
+  if(!all.length){el.innerHTML='<div class="es">Noch keine Maschinen.</div>';return;}
+  el.innerHTML=all.map(([k,m])=>{
+    const isB=!!m.builtin,items=m.groups.reduce((s,g)=>s+g.items.length,0);
+    return'<div class="mc"><div class="mch" onclick="toggleMC(\''+k+'\')"><div class="mci"><div class="mcn">'+H(m.label)+(m.type?' <span style="font-weight:400;color:var(--tm);font-size:11px">('+H(m.type)+')</span>':'')+'</div><div class="mcs">'+(m.serial||'—')+' · Bj.'+(m.year||'—')+' · '+m.groups.length+'Gr. · '+items+'Pkte</div></div><div class="mca"><span class="bdg '+(isB?'bdg-b':'bdg-c')+'">'+(isB?'Standard':'Eigene')+'</span>'+
+      (isB?'<button class="bsm" onclick="event.stopPropagation();showME(\''+k+'\',true)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Kopie</button>'
+        :'<button class="bsm" onclick="event.stopPropagation();showME(\''+k+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Bearb.</button><button class="bd" onclick="event.stopPropagation();delMachine(\''+k+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Löschen</button>'
+      )+'</div></div><div class="mcb" id="mc-'+k+'">'+m.groups.map(g=>'<div style="margin-bottom:8px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tf);margin-bottom:3px">'+H(g.title)+'</div>'+g.items.map(i=>'<div style="font-size:12px;padding:2px 0 2px 10px;border-left:2px solid var(--bl);color:var(--tm);margin-bottom:1px">'+H(i)+'</div>').join('')+'</div>').join('')+'</div></div>';
+  }).join('');
+}
+function toggleMC(k){document.getElementById('mc-'+k).classList.toggle('open');}
+async function delMachine(k){if(!confirm('Maschine löschen?'))return;const c=ld(KM,{});delete c[k];sv(KM,c);renderMgmt();buildDD();}
+function showME(k,asCopy){
+  meId=(k&&!asCopy)?k:null;
+  const m=k?allM()[k]:null;
+  document.getElementById('me-title').textContent=asCopy?'Maschine kopieren':(k?'Bearbeiten':'Neue Maschine');
+  document.getElementById('me-label').value=m?(asCopy?m.label+' (Kopie)':m.label):'';
+  document.getElementById('me-serial').value=m?(m.serial||''):'';
+  document.getElementById('me-year').value=m?(m.year||''):'';
+  document.getElementById('me-type').value=m?(m.type||''):'';
+  const ge=document.getElementById('me-ge');ge.innerHTML='';
+  (m?JSON.parse(JSON.stringify(m.groups)):JSON.parse(JSON.stringify(tmpl()))).forEach(g=>addGBlock(ge,g));
+  document.getElementById('mgmt-ed').style.display='block';
+  setTimeout(()=>document.getElementById('mgmt-ed').scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+async function saveMachine(){
+  const label=document.getElementById('me-label').value.trim();
+  if(!label){alert('Bezeichnung eingeben.');return;}
+  const groups=readGroups('me-ge');
+  if(!groups.length||!groups.some(g=>g.items.length)){alert('Mindestens einen Prüfpunkt anlegen.');return;}
+  const custom=ld(KM,{}),key=meId||('m_'+Date.now());
+  custom[key]={label,serial:document.getElementById('me-serial').value.trim(),year:document.getElementById('me-year').value.trim(),type:document.getElementById('me-type').value.trim(),builtin:false,groups};
+  if(USE_API){try{await apiFetch('/api/maschinen',{method:'POST',body:{id:key,...custom[key]}});}catch(e){console.error(e);}}
+  else{sv(KM,custom);}
+  _customM=custom;meId=null;
+  document.getElementById('mgmt-ed').style.display='none';
+  renderMgmt();buildDD();window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelME(){meId=null;document.getElementById('mgmt-ed').style.display='none';window.scrollTo({top:0,behavior:'smooth'});}
+function addMG(){
+  const ge=document.getElementById('me-ge');
+  addGBlock(ge,{title:'',items:['']});
+  ge.lastChild.scrollIntoView({behavior:'smooth',block:'nearest'});
+  ge.lastChild.querySelector('.gh input').focus();
+}
+
+/* ═══════════════════════════════════════════════
+   SHARED GROUP EDITOR
+═══════════════════════════════════════════════ */
+function addGBlock(container,g){
+  const div=document.createElement('div');div.className='gb';
+  div.innerHTML='<div class="gh"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tf)" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><input type="text" placeholder="Gruppenname…" value="'+H(g.title)+'"><button class="bd" style="padding:3px 7px" onclick="rmGroup(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="gi">'+g.items.map(it=>iRow(it)).join('')+'</div><div class="air"><button class="aib" onclick="addItem(this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Punkt hinzufügen</button></div>';
+  container.appendChild(div);
+}
+function iRow(val){return'<div class="ir"><input type="text" placeholder="Prüfpunkt…" value="'+H(val)+'"><button class="bd" style="padding:3px 6px;flex-shrink:0" onclick="rmItem(this)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';}
+function rmGroup(btn){const b=btn.closest('.gb'),p=b.parentElement;if(p.querySelectorAll('.gb').length<=1&&!confirm('Letzte Gruppe löschen?'))return;b.remove();}
+function addItem(btn){const d=btn.closest('.gb').querySelector('.gi');d.insertAdjacentHTML('beforeend',iRow(''));d.lastChild.querySelector('input').focus();}
+function rmItem(btn){btn.closest('.ir').remove();}
+function readGroups(cid){return[...document.querySelectorAll('#'+cid+' .gb')].map(b=>({title:b.querySelector('.gh input').value.trim(),items:[...b.querySelectorAll('.gi input')].map(i=>i.value.trim()).filter(Boolean)})).filter(g=>g.title||g.items.length);}
+
+/* ═══════════════════════════════════════════════
+   FRAGEBOGEN
+═══════════════════════════════════════════════ */
+const qCatCol=cat=>{const m={'Allgemeine Sicherheit':'#1a5c3a','Maschinenkontrolle':'#185fa5','Bedienung der Maschine':'#533ab7','Wartung und Pflege':'#7a4f0d','Praktische Sicherheit':'#8b1a1a'};return m[cat]||'#6b6860';};
+const qCatBg=cat=>{const m={'Allgemeine Sicherheit':'#e8f2ec','Maschinenkontrolle':'#e6f1fb','Bedienung der Maschine':'#eeedfe','Wartung und Pflege':'#fdf3e3','Praktische Sicherheit':'#fdf0f0'};return m[cat]||'#f1efe8';};
+
+function renderQList(){
+  const qs=qAll(),el=document.getElementById('qz-list');
+  if(!qs.length){el.innerHTML='<div class="es">Noch keine Fragen.</div>';return;}
+  const cats=[...new Set(qs.map(q=>q.cat))];
+  el.innerHTML=cats.map(cat=>{
+    const cqs=qs.filter(q=>q.cat===cat),col=qCatCol(cat);
+    return'<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:'+col+';padding:4px 0 6px">'+H(cat)+'</div>'+
+      cqs.map(q=>'<div class="mc" style="margin-bottom:6px"><div class="mch" style="cursor:default"><div class="mci"><div class="mcn" style="font-size:12px">'+H(q.q)+'</div><div class="mcs" style="margin-top:4px">'+q.opts.map((o,i)=>'<span style="margin-right:8px;color:'+(i===q.correct?col:'var(--tf)')+'">'+('ABCD'[i])+'. '+H(o)+'</span>').join('')+'</div></div><div class="mca"><button class="bsm" onclick="showQE(\''+q.id+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Bearb.</button><button class="bd" onclick="delQ(\''+q.id+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Löschen</button></div></div></div>').join('')+
+    '</div>';
+  }).join('');
+}
+
+function showQE(id){
+  qeId=id;
+  const q=id?qAll().find(x=>x.id===id):null;
+  document.getElementById('qe-title').textContent=id?'Frage bearbeiten':'Neue Frage';
+  document.getElementById('qe-cat').value=q?q.cat:'';
+  document.getElementById('qe-text').value=q?q.q:'';
+  document.getElementById('qe-expl').value=q?q.expl:'';
+  const wrap=document.getElementById('qe-opts');wrap.innerHTML='';
+  (q?q.opts:['','','']).forEach((o,i)=>qAddOptRow(o,q?i===q.correct:i===0));
+  document.getElementById('qz-main').style.display='none';
+  document.getElementById('qz-editor').style.display='block';
+  setTimeout(()=>document.getElementById('qz-editor').scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+function qAddOpt(){qAddOptRow('',false);}
+function qAddOptRow(val,isCor){
+  const wrap=document.getElementById('qe-opts'),idx=wrap.children.length;
+  const div=document.createElement('div');div.style.cssText='display:flex;align-items:center;gap:7px;margin-bottom:7px';
+  div.innerHTML='<span style="width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;color:var(--tm)">'+'ABCD'[idx]+'</span><input type="text" style="flex:1;height:34px;border:1px solid var(--border);border-radius:var(--r);padding:0 9px;font-family:inherit;font-size:12px;color:var(--text);background:var(--bg)" placeholder="Antwort…" value="'+H(val||'')+'"><label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tm);cursor:pointer;white-space:nowrap"><input type="radio" name="qcor" value="'+idx+'" '+(isCor?'checked':'')+' style="accent-color:var(--ac)">Richtig</label><button class="bd" style="padding:3px 6px" onclick="this.parentElement.remove();qRenum()"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  wrap.appendChild(div);
+}
+function qRenum(){document.querySelectorAll('#qe-opts > div').forEach((r,i)=>{const s=r.querySelector('span');if(s)s.textContent='ABCD'[i]||String(i+1);const rd=r.querySelector('input[type=radio]');if(rd)rd.value=i;});}
+function saveQ(){
+  const cat=document.getElementById('qe-cat').value.trim(),qt=document.getElementById('qe-text').value.trim(),expl=document.getElementById('qe-expl').value.trim();
+  if(!qt){alert('Fragetext eingeben.');return;}
+  const opts=[...document.querySelectorAll('#qe-opts > div')].map(r=>r.querySelector('input[type=text]').value.trim()).filter(Boolean);
+  if(opts.length<2){alert('Mindestens 2 Antworten eingeben.');return;}
+  let correct=0;document.querySelectorAll('input[name=qcor]').forEach(r=>{if(r.checked)correct=parseInt(r.value);});
+  const id=qeId||('q_'+Date.now()),entry={id,cat:cat||'Allgemein',q:qt,opts,correct,expl};
+  const all=qAll();
+  if(qeId){const i=all.findIndex(x=>x.id===qeId);if(i>=0)all[i]=entry;else all.push(entry);}else{all.push(entry);}
+  svQ(all);qeId=null;
+  document.getElementById('qz-editor').style.display='none';
+  document.getElementById('qz-main').style.display='block';
+  renderQList();window.scrollTo({top:0,behavior:'smooth'});
+}
+function delQ(id){if(!confirm('Frage löschen?'))return;svQ(qAll().filter(q=>q.id!==id));renderQList();}
+function cancelQE(){qeId=null;document.getElementById('qz-editor').style.display='none';document.getElementById('qz-main').style.display='block';window.scrollTo({top:0,behavior:'smooth'});}
+
+/* ── Test ── */
+function startQuiz(){
+  const qs=qAll();if(!qs.length){alert('Keine Fragen vorhanden.');return;}
+  qRun={questions:[...qs].sort(()=>Math.random()-.5),current:0,answers:[]};
+  document.getElementById('qz-main').style.display='none';
+  document.getElementById('qz-editor').style.display='none';
+  document.getElementById('qz-test').style.display='block';
+  renderQQ();
+}
+function renderQQ(){
+  const {questions,current,answers}=qRun;
+  if(current>=questions.length){endQuiz();return;}
+  const q=questions[current],pct=Math.round((current/questions.length)*100);
+  document.getElementById('qz-prog').style.width=pct+'%';
+  const answered=answers[current]!==undefined,chosen=answers[current];
+  const col=qCatCol(q.cat),bg=qCatBg(q.cat);
+  document.getElementById('qz-body').innerHTML=
+    '<div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;margin-bottom:12px;background:'+bg+';color:'+col+';border:0.5px solid '+col+'33">'+H(q.cat)+'</div>'+
+    '<div style="font-size:11px;color:var(--tm);margin-bottom:5px">Frage '+(current+1)+' von '+questions.length+'</div>'+
+    '<div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:16px;line-height:1.5">'+H(q.q)+'</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'+
+      q.opts.map((o,i)=>{
+        let ob='var(--surface)',ob2='1px solid var(--border)',oc='var(--text)',ptr=answered?'pointer-events:none':'cursor:pointer';
+        if(answered){if(i===q.correct){ob='#e1f5ee';ob2='1px solid #5dcaa5';oc='#085041';}else if(i===chosen&&chosen!==q.correct){ob='#faece7';ob2='1px solid #f0997b';oc='#4a1b0c';}else{ob='var(--bg)';}}
+        return'<button onclick="qChoose('+i+')" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--r);background:'+ob+';border:'+ob2+';color:'+oc+';font-family:inherit;font-size:12px;text-align:left;line-height:1.4;width:100%;'+ptr+'"><span class="ql">'+'ABCD'[i]+'</span>'+H(o)+'</button>';
+      }).join('')+
+    '</div>'+
+    (answered&&q.expl?'<div style="padding:10px 12px;border-radius:var(--r);font-size:12px;margin-bottom:16px;line-height:1.5;background:'+(chosen===q.correct?'#e1f5ee':'#faece7')+';color:'+(chosen===q.correct?'#085041':'#4a1b0c')+';border:0.5px solid '+(chosen===q.correct?'#5dcaa5':'#f0997b')+'"><strong>'+(chosen===q.correct?'✓ Richtig! ':'✗ Falsch. ')+H(q.expl)+'</strong></div>':'')+
+    '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--tm)">'+(current+1)+'/'+questions.length+'</span>'+
+    (answered?'<button class="bp" style="width:auto;height:36px;padding:0 16px;margin-top:0;font-size:12px" onclick="qNext()">'+(current===questions.length-1?'Auswertung':'Nächste →')+'</button>':'')+
+    '</div>';
+}
+function qChoose(i){if(qRun.answers[qRun.current]!==undefined)return;qRun.answers[qRun.current]=i;renderQQ();}
+function qNext(){if(qRun.current<qRun.questions.length-1){qRun.current++;renderQQ();}else endQuiz();}
+function endQuiz(){
+  document.getElementById('qz-prog').style.width='100%';
+  const {questions,answers}=qRun;
+  const correct=answers.filter((a,i)=>a===questions[i].correct).length;
+  const total=questions.length,pct=Math.round((correct/total)*100),pass=pct>=70;
+  const cats=[...new Set(questions.map(q=>q.cat))];
+  const cs=cats.map(cat=>{const qs=questions.filter(q=>q.cat===cat),ok=qs.filter(q=>answers[questions.indexOf(q)]===q.correct).length;return{cat,ok,total:qs.length,pct:Math.round((ok/qs.length)*100)};});
+  document.getElementById('qz-body').innerHTML=
+    '<div style="text-align:center;padding:8px 0 18px">'+
+      '<div style="width:100px;height:100px;border-radius:50%;border:4px solid '+(pass?'var(--ac)':'#d85a30')+';display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 12px">'+
+        '<span style="font-size:28px;font-weight:500;color:'+(pass?'var(--ac)':'#d85a30')+';line-height:1">'+correct+'</span>'+
+        '<span style="font-size:11px;color:var(--tm);margin-top:2px">von '+total+'</span>'+
+      '</div>'+
+      '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:10px;background:'+(pass?'#e1f5ee':'#faece7')+';color:'+(pass?'#085041':'#4a1b0c')+';border:0.5px solid '+(pass?'#5dcaa5':'#f0997b')+'">'+(pass?'✓ Bestanden':'✗ Nicht bestanden')+'</div>'+
+      '<div style="font-size:12px;color:var(--tm);margin-bottom:16px">'+pct+'% · mind. 70% erforderlich</div>'+
+      '<div style="text-align:left;margin-bottom:16px">'+cs.map(s=>'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--bl);font-size:12px"><span style="flex:1;color:'+qCatCol(s.cat)+'">'+H(s.cat)+'</span><div style="width:100px;height:4px;background:var(--bl);border-radius:2px;overflow:hidden"><div style="height:100%;border-radius:2px;background:'+qCatCol(s.cat)+';width:'+s.pct+'%"></div></div><span style="font-size:11px;color:var(--tm);min-width:28px;text-align:right">'+s.ok+'/'+s.total+'</span></div>').join('')+'</div>'+
+      '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'+
+        '<button class="bs" onclick="qRetry()">Nochmal</button>'+
+        '<button class="bs" onclick="qExit()">Zur Übersicht</button>'+
+      '</div>'+
+    '</div>';
+  const res={id:'QR-'+Date.now(),ts:new Date().toISOString(),correct,total,pct,pass};
+  const all=qResAll();all.unshift(res);if(all.length>50)all.pop();sv(KR,all);
+  renderQRes();
+}
+function qRetry(){qRun={questions:[...qAll()].sort(()=>Math.random()-.5),current:0,answers:[]};renderQQ();}
+function qExit(){qRun=null;document.getElementById('qz-test').style.display='none';document.getElementById('qz-main').style.display='block';renderQList();renderQRes();window.scrollTo({top:0,behavior:'smooth'});}
+function renderQRes(){
+  const el=document.getElementById('qz-res-list'),res=qResAll();
+  if(!res.length){el.innerHTML='';return;}
+  el.innerHTML='<div class="card"><div style="font-size:13px;font-weight:600;margin-bottom:12px">Bisherige Testergebnisse</div>'+
+    res.slice(0,10).map(r=>{const d=new Date(r.ts).toLocaleDateString('de-DE')+' '+new Date(r.ts).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--bl);font-size:12px;flex-wrap:wrap;gap:5px"><span style="color:var(--tm)">'+d+'</span><span>'+r.correct+'/'+r.total+' ('+r.pct+'%)</span><span class="bdg '+(r.pass?'bdg-ok':'bdg-w')+'">'+(r.pass?'Bestanden':'Nicht bestanden')+'</span></div>';}).join('')+
+  '</div>';
+}
+
+/* ═══════════════════════════════════════════════
+   PDF
+═══════════════════════════════════════════════ */
+function dlPDF(){if(lastRec)genPDF(lastRec);}
+function dlPDFid(id){const r=dbAll().find(r=>r.id===id);if(r)genPDF(r);}
+function genPDF(rec){
+  if(!window.jspdf){alert('PDF lädt noch.');return;}
+  const{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,M=18,CW=W-2*M;let y=22;
+  doc.setFillColor(26,92,58);doc.rect(0,0,W,14,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+  doc.text('EINWEISUNGSPROTOKOLL  \u00b7  STANDORT MERTERT',M,9);
+  y=24;doc.setFontSize(17);doc.setTextColor(26,58,38);doc.text(rec.maschineLabel,M,y);y+=7;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(107,104,96);
+  doc.text('ID: '+rec.id+'  \u00b7  '+new Date(rec.datum).toLocaleDateString('de-DE')+'  \u00b7  SN: '+(rec.serial||'\u2014'),M,y);y+=8;
+  doc.setDrawColor(220,218,212);doc.setLineWidth(0.3);doc.line(M,y,W-M,y);y+=7;
+  const c2=M+CW/2+5;
+  doc.setFontSize(8);doc.setTextColor(107,104,96);doc.setFont('helvetica','bold');
+  doc.text('FAHRER',M,y);doc.text('EINWEISENDER',c2,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(26,25,23);
+  doc.text(rec.fahrer,M,y);doc.text(rec.einweiser,c2,y);y+=10;
+  doc.setDrawColor(220,218,212);doc.line(M,y,W-M,y);y+=8;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(107,104,96);
+  doc.text('EINWEISUNGSINHALTE',M,y);y+=6;
+  const m=allM()[rec.maschine];
+  if(m){m.groups.forEach(g=>{if(y>260){doc.addPage();y=20;}doc.setFont('helvetica','bold');doc.setTextColor(26,92,58);doc.setFontSize(8);doc.text(g.title.toUpperCase(),M,y);y+=5;doc.setFont('helvetica','normal');doc.setFontSize(9);g.items.forEach(it=>{if(y>268){doc.addPage();y=20;}const done=rec.geprueft.includes(it);doc.setTextColor(done?26:180,done?92:100,done?58:100);doc.text((done?'\u2713 ':'\u25cb ')+it,M+3,y);y+=4.8;});y+=4;});}
+  if(y>220){doc.addPage();y=20;}
+  y+=4;doc.setDrawColor(220,218,212);doc.line(M,y,W-M,y);y+=8;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(107,104,96);
+  doc.text('UNTERSCHRIFTEN',M,y);y+=4;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(107,104,96);
+  doc.text('Hiermit best\u00e4tigt der Mitarbeiter, dass die Einweisung durchgef\u00fchrt und verstanden wurde.',M,y);y+=8;
+  const sw=80,sh=26,sy=y;
+  [{label:'Unterschrift Fahrer',data:rec.sigF,x:M},{label:'Unterschrift Einweisender',data:rec.sigE,x:M+sw+8}].forEach(s=>{
+    doc.setFontSize(7.5);doc.setTextColor(107,104,96);doc.text(s.label,s.x,sy);
+    doc.setFillColor(245,244,240);doc.setDrawColor(200,198,193);doc.rect(s.x,sy+2,sw,sh,'FD');
+    if(s.data){try{doc.addImage(s.data,'PNG',s.x+1,sy+3,sw-2,sh-2);}catch(e){}}
+  });
+  y=sy+sh+9;doc.setFontSize(7.5);doc.setTextColor(107,104,96);doc.text('Unterschrift Betriebsleitung',M,y);
+  doc.setFillColor(245,244,240);doc.setDrawColor(200,198,193);doc.rect(M,y+2,sw,sh,'FD');
+  if(rec.sigL){try{doc.addImage(rec.sigL,'PNG',M+1,y+3,sw-2,sh-2);}catch(e){}}
+  y+=sh+9;doc.setFontSize(7);doc.setTextColor(160,158,153);
+  doc.text('Mertert, '+new Date(rec.datum).toLocaleDateString('de-DE')+'  \u00b7  '+new Date(rec.ts).toLocaleString('de-DE'),M,y);
+  doc.save('Einweisung_'+rec.fahrer.replace(/\s+/g,'_')+'_'+rec.maschineLabel.replace(/\s+/g,'_')+'_'+rec.datum+'.pdf');
+}
+
+/* ═══════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════ */
+function H(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ═══════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════ */
+window.addEventListener('load',async()=>{
+  ['s1','s2','s3'].forEach(initS);
+  document.getElementById('datum').value=new Date().toISOString().split('T')[0];
+  await Promise.all([loadCustomM(),loadTmpl(),loadRecs()]);
+  buildDD();upRC();upP();
+});
+</script>
+</body>
+</html>
