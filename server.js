@@ -4,16 +4,17 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-
-// Railway setzt PORT automatisch — MUSS 0.0.0.0 binden
 const PORT = parseInt(process.env.PORT) || 3000;
 
-// Datenbank-Verzeichnis
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+// DB-Pfad: /tmp ist auf Railway IMMER beschreibbar
+// Für dauerhafte Speicherung: Railway Volume auf /data mounten + DATA_DIR=/data setzen
+const DATA_DIR = process.env.DATA_DIR || '/tmp';
 try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch(e) {}
 const DB_PATH = path.join(DATA_DIR, 'einweisungen.db');
 
+console.log(`DB-Pfad: ${DB_PATH}`);
 const db = new Database(DB_PATH);
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS protokolle (
     id TEXT PRIMARY KEY, ts TEXT, datum TEXT,
@@ -31,21 +32,18 @@ db.exec(`
   );
 `);
 
+console.log('DB bereit.');
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Health check — Railway braucht das
-app.get('/health', (req, res) => res.json({ ok: true }));
+app.get('/health', (req, res) => res.json({ ok: true, db: DB_PATH }));
 
 /* ── Protokolle ── */
 app.get('/api/protokolle', (req, res) => {
   try {
     const rows = db.prepare('SELECT id,ts,datum,maschine,maschine_label,serial,year,fahrer,einweiser,geprueft,nicht_geprueft FROM protokolle ORDER BY ts DESC').all();
-    res.json(rows.map(r => ({
-      ...r, maschineLabel: r.maschine_label,
-      geprueft: JSON.parse(r.geprueft),
-      nichtGeprueft: JSON.parse(r.nicht_geprueft)
-    })));
+    res.json(rows.map(r => ({ ...r, maschineLabel: r.maschine_label, geprueft: JSON.parse(r.geprueft), nichtGeprueft: JSON.parse(r.nicht_geprueft) })));
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -134,11 +132,9 @@ app.get('/api/export/csv', (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-/* ── Fallback → index.html ── */
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// WICHTIG: 0.0.0.0 damit Railway den Port erkennt
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server läuft auf 0.0.0.0:${PORT}`);
-  console.log(`DB: ${DB_PATH}`);
+  console.log(`✓ Server läuft auf Port ${PORT}`);
+  console.log(`✓ DB: ${DB_PATH}`);
 });
